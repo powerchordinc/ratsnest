@@ -104,7 +104,7 @@ func main() {
 			MaxDepth: 2,
 		})
 		
-		if root.IsSatisfied {
+		if root.IsSatisfied() {
 			fmt.Printf("'%v %v' appears to be what you are seeking.", thisD["manufacturer"], thisD["name"])
 		}
 	}
