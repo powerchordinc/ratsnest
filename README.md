@@ -1,5 +1,5 @@
 # Rat's Nest
-Simple presence validation for deeply-nested, arbitrary maps in Golang
+Simple validation for deeply-nested, arbitrary maps in Golang
 
 ## The Need
 
