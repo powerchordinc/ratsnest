@@ -1,2 +1,2 @@
-// Package ratsnest provides imple validation for deeply-nested, arbitrary maps in Golang.
+// Package ratsnest provides simple validation for deeply-nested (or not deeply-nested), arbitrary maps in Golang.
 package ratsnest
