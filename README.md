@@ -22,15 +22,11 @@ Let's try working with some arbitrary JSON:
 				"ale"
 			},
 			"location": {
-				"US": {
-					"FL": {
-						"Gulf Coast": {
-							"Tampa": {
-								"Ybor City"
-							}
-						}
-					}
-				}
+				"US": [
+					"Gulf Coast",
+					"Tampa",
+					"FL"
+				]
 			}
 		}
 	}
@@ -48,8 +44,8 @@ all the values that you desire.
 ## The Solution
 
 This package aims to help verify that a JSON resource (or any other resource that can be unmarshaled to a 
-`map[string]interface{}`) meets your presence criteria. In other words, it will help you loop
-through all of those endless arbitrary objects to get to your dark, Gulf Coast dreams.
+`map[string]interface{}`) meets your presence criteria. In other words, it will help you loop and walk
+through all of those endless arbitrary objects.
 
 ### Usage
 
@@ -68,13 +64,14 @@ var theData = []map[string]interface{}{
 		"name": "Maduro",
 		"manufacturer": "Cigar City",
 		"depth": "dark",
+		"quantity": 12,
 		"attributes": {
 			"manufacturedIn": {
-				"US": {
+				"US": []string{
 					"Gulf coast",
 					"FL",
 					"Tampa"
-				]
+				}
 			}
 		}
 	}
@@ -82,34 +79,47 @@ var theData = []map[string]interface{}{
 
 func main() {
 	for _, thisD := range theData {
-		root := ratsnest.New(thisD)
-		root.Require(ratsnest.Node{ // returns a ratsnest.Node, but we don't care in this case
+		root, err := ratsnest.New(thisD)
+		if err != nil {
+			panic(fmt.Errorf("Error creating a new root node: %v", err))
+		}
+		_, err = root.Require(ratsnest.Node{ // returns a ratsnest.Node, but we don't care in this case
 			Value: "Cigar City",
 			Key: "manufacturer", // defaults to any key
-			MaxDepth: ratsnest.ROOT, // defaults to infinite depth
+			MaxDepth: 1, // defaults to 0, which is infinite
 		}
-		root.Require(ratsnest.Node{
+		if err != nil {
+			 continue // node not found
+		}
+		_, err = root.Require(ratsnest.Node{
 			Value: 12,
-			Key: "quantity" // I know, I know, but 6?!
+			Key: "quantity",
 		})
-		usa := root.Require(ratsnest.Node{
-			Value: "US",
-			// we don't care what `Key` has the value. We own that particular two-letter combination.
-			// default of `Depth: ratsnest.INFINITE` works here
+		if err != nil {
+			continue // node not found
+		}
+		usa, err := root.Require(ratsnest.Node{
+			Value: "US", // we don't care what `Key` has the value
 		})
-		usa.Require(ratsnest.Node{
+		if err != nil {
+			continue // node not found
+		}
+		_, err = usa.Require(ratsnest.Node{
 			Value: "Tampa",
-			Case: ratsnest.CASE_INSENSITIVE, // defaults to case-sensitive
-			// unless you know of another "Tampa" in the "Gulf Coast" then we're safe with any key--unless--Louisiana...
+			Case: ratsnest.CaseInsensitive, // defaults to case-sensitive
 			MaxDepth: 2,
 		})
-		
-		if root.IsSatisfied() {
-			fmt.Printf("'%v %v' appears to be what you are seeking.", thisD["manufacturer"], thisD["name"])
+		if err != nil {
+			continue // node not found
 		}
+		
+		fmt.Printf("'%v %v' appears to be what you are seeking.", thisD["manufacturer"], thisD["name"])
 	}
 }
-
-
-// btw, I googled for "Tampa, Louisiana" and I think we're safe.
 ```
+
+### Comparison of Maps and Slices
+
+Where maps are concerned, you can ask for just a `Key`, a `Key` and `Value`, or the entire map as `Value: map[string]interface{}{...}`. Order of appearance does not matter. Case [in]sensitivity applies to both keys and values of the maps themselves (should the values be strings).
+
+For slices, you can ask for just one value within the slice, you can declare `Value` to be a `[]interface{}`, which will ensure the lengths match and all elements are present (regardless of order), or you can declare a `Key` and a `Value` (for searching `map[string][]interface{}`).
