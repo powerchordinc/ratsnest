@@ -49,7 +49,7 @@ through all of those endless arbitrary objects.
 
 ### Usage
 
-An [example application](https://github.com/powerchordinc/ratsnest/example) can be found in the [`example`](https://github.com/powerchordinc/ratsnest/example) directory
+An [example application](https://github.com/powerchordinc/ratsnest/blob/master/example/main.go) can be found in the [`example` directory](https://github.com/powerchordinc/ratsnest/tree/master/example).
 
 ### Comparison of Maps and Slices
 
