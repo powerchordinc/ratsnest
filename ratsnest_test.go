@@ -44,6 +44,43 @@ var _ = Describe("Rat's Nest", func() {
 					"ultrices",
 					"imperdiet",
 				},
+				"fusce": []int{
+					1,
+					2,
+					4,
+					3,
+				},
+				"nonQuam": []int64{
+					5,
+					6,
+					7,
+					8,
+				},
+				"sedQuam": []int32{
+					9,
+					10,
+					12,
+					11,
+				},
+				"rutrum": []float64{
+					1.123,
+					2.123,
+					4.123,
+					3.123,
+				},
+				"quisque": []float32{
+					5.123,
+					6.123,
+					8.123,
+					7.123,
+				},
+				"tristique": []bool{
+					false,
+					true,
+					true,
+					false,
+					true,
+				},
 			},
 		}
 		err = nil
@@ -341,6 +378,13 @@ var _ = Describe("Rat's Nest", func() {
 								},
 							},
 					}),
+					Entry("for requesting a value within a string array", validationCases{
+							{
+								toRegister: Node{
+									Value: "imperdiet",
+								},
+							},
+					}),
 					Entry("for requesting a string array with a mismatched value", validationCases{
 							{
 								toRegister: Node{
@@ -349,6 +393,193 @@ var _ = Describe("Rat's Nest", func() {
 										"eu",
 										"ultrices",
 										"foobar",
+									},
+								},
+								expErr: NodeNotFoundError{},
+							},
+					}),
+					Entry("for requesting a int array value", validationCases{
+							{
+								toRegister: Node{
+									Value: []int{
+										4,
+										3,
+										2,
+										1,
+									},
+								},
+							},
+					}),
+					Entry("for requesting a value within a int array", validationCases{
+							{
+								toRegister: Node{
+									Value: 3,
+								},
+							},
+					}),
+					Entry("for requesting a int array with a mismatched value", validationCases{
+							{
+								toRegister: Node{
+									Value: []int{
+										4,
+										3,
+										2,
+										5,
+									},
+								},
+								expErr: NodeNotFoundError{},
+							},
+					}),
+					Entry("for requesting a int64 array value", validationCases{
+							{
+								toRegister: Node{
+									Value: []int64{
+										8,
+										7,
+										6,
+										5,
+									},
+								},
+							},
+					}),
+					Entry("for requesting a value within a int64 array", validationCases{
+							{
+								toRegister: Node{
+									Value: int64(6),
+								},
+							},
+					}),
+					Entry("for requesting a int64 array with a mismatched value", validationCases{
+							{
+								toRegister: Node{
+									Value: []int64{
+										7,
+										6,
+										5,
+										3,
+									},
+								},
+								expErr: NodeNotFoundError{},
+							},
+					}),
+					Entry("for requesting a int32 array value", validationCases{
+							{
+								toRegister: Node{
+									Value: []int32{
+										12,
+										11,
+										9,
+										10,
+									},
+								},
+							},
+					}),
+					Entry("for requesting a value within a int32 array", validationCases{
+							{
+								toRegister: Node{
+									Value: int32(11),
+								},
+							},
+					}),
+					Entry("for requesting a int32 array with a mismatched value", validationCases{
+							{
+								toRegister: Node{
+									Value: []int32{
+										9,
+										10,
+										11,
+										5,
+									},
+								},
+								expErr: NodeNotFoundError{},
+							},
+					}),
+					Entry("for requesting a float64 array value", validationCases{
+							{
+								toRegister: Node{
+									Value: []float64{
+										1.123,
+										2.123,
+										3.123,
+										4.123,
+									},
+								},
+							},
+					}),
+					Entry("for requesting a value within a float64 array", validationCases{
+							{
+								toRegister: Node{
+									Value: float64(2.123),
+								},
+							},
+					}),
+					Entry("for requesting a float64 array with a mismatched value", validationCases{
+							{
+								toRegister: Node{
+									Value: []float64{
+										1.123,
+										2.123,
+										3.123,
+										5.123,
+									},
+								},
+								expErr: NodeNotFoundError{},
+							},
+					}),
+					Entry("for requesting a float32 array value", validationCases{
+							{
+								toRegister: Node{
+									Value: []float32{
+										5.123,
+										6.123,
+										7.123,
+										8.123,
+									},
+								},
+							},
+					}),
+					Entry("for requesting a value within a float32 array", validationCases{
+							{
+								toRegister: Node{
+									Value: float32(6.123),
+								},
+							},
+					}),
+					Entry("for requesting a float32 array with a mismatched value", validationCases{
+							{
+								toRegister: Node{
+									Value: []float32{
+										5.123,
+										6.123,
+										7.123,
+										9.123,
+									},
+								},
+								expErr: NodeNotFoundError{},
+							},
+					}),
+					Entry("for requesting a bool array value", validationCases{
+							{
+								toRegister: Node{
+									Value: []bool{
+										true,
+										true,
+										true,
+										false,
+										false,
+									},
+								},
+							},
+					}),
+					Entry("for requesting a bool array with a mismatched value", validationCases{
+							{
+								toRegister: Node{
+									Value: []bool{
+										true,
+										true,
+										false,
+										false,
+										false,
 									},
 								},
 								expErr: NodeNotFoundError{},

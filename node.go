@@ -110,6 +110,90 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					}
 				}
 			}
+		case []string:
+			if _, reqNodeIsArr := reqNode.Value.([]string); reqNodeIsArr {
+				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
+					return cn
+				}
+			} else {
+				for _, v := range cn.Value.([]string) {
+					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
+						return cn
+					}
+				}
+			}
+		case []int:
+			if _, reqNodeIsArr := reqNode.Value.([]int); reqNodeIsArr {
+				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
+					return cn
+				}
+			} else {
+				for _, v := range cn.Value.([]int) {
+					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
+						return cn
+					}
+				}
+			}
+		case []int64:
+			if _, reqNodeIsArr := reqNode.Value.([]int64); reqNodeIsArr {
+				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
+					return cn
+				}
+			} else {
+				for _, v := range cn.Value.([]int64) {
+					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
+						return cn
+					}
+				}
+			}
+		case []int32:
+			if _, reqNodeIsArr := reqNode.Value.([]int32); reqNodeIsArr {
+				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
+					return cn
+				}
+			} else {
+				for _, v := range cn.Value.([]int32) {
+					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
+						return cn
+					}
+				}
+			}
+		case []float64:
+			if _, reqNodeIsArr := reqNode.Value.([]float64); reqNodeIsArr {
+				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
+					return cn
+				}
+			} else {
+				for _, v := range cn.Value.([]float64) {
+					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
+						return cn
+					}
+				}
+			}
+		case []float32:
+			if _, reqNodeIsArr := reqNode.Value.([]float32); reqNodeIsArr {
+				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
+					return cn
+				}
+			} else {
+				for _, v := range cn.Value.([]float32) {
+					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
+						return cn
+					}
+				}
+			}
+		case []bool:
+			if _, reqNodeIsArr := reqNode.Value.([]bool); reqNodeIsArr {
+				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
+					return cn
+				}
+			} else {
+				for _, v := range cn.Value.([]bool) {
+					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
+						return cn
+					}
+				}
+			}
 		default:
 			if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, reqNode.Case) {
 				return cn
@@ -191,6 +275,109 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 				return false
 			}
 		return true
+	case []int:
+		t1Arr := t1.([]int)
+		t2Arr, t2IsArr := t2.([]int)
+		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+			return false
+		}
+		T1IntArr:
+			for _, v := range t1Arr {
+				for _, t2V := range t2Arr {
+					if v == t2V {
+						continue T1IntArr
+					}
+				}
+				return false
+			}
+		return true
+	case []int64:
+		t1Arr := t1.([]int64)
+		t2Arr, t2IsArr := t2.([]int64)
+		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+			return false
+		}
+		T1Int64Arr:
+			for _, v := range t1Arr {
+				for _, t2V := range t2Arr {
+					if v == t2V {
+						continue T1Int64Arr
+					}
+				}
+				return false
+			}
+		return true
+	case []int32:
+		t1Arr := t1.([]int32)
+		t2Arr, t2IsArr := t2.([]int32)
+		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+			return false
+		}
+		T1Int32Arr:
+			for _, v := range t1Arr {
+				for _, t2V := range t2Arr {
+					if v == t2V {
+						continue T1Int32Arr
+					}
+				}
+				return false
+			}
+		return true
+	case []float64:
+		t1Arr := t1.([]float64)
+		t2Arr, t2IsArr := t2.([]float64)
+		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+			return false
+		}
+		T1Float64Arr:
+			for _, v := range t1Arr {
+				for _, t2V := range t2Arr {
+					if v == t2V {
+						continue T1Float64Arr
+					}
+				}
+				return false
+			}
+		return true
+	case []float32:
+		t1Arr := t1.([]float32)
+		t2Arr, t2IsArr := t2.([]float32)
+		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+			return false
+		}
+		T1Float32Arr:
+			for _, v := range t1Arr {
+				for _, t2V := range t2Arr {
+					if v == t2V {
+						continue T1Float32Arr
+					}
+				}
+				return false
+			}
+		return true
+	case []bool:
+		t1Arr := t1.([]bool)
+		t2Arr, t2IsArr := t2.([]bool)
+		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+			return false
+		}
+		trues, expTrues := 0, 0
+		falses, expFalses := 0, 0
+		for _, t1V := range t1Arr {
+			if t1V {
+				expTrues++
+			} else {
+				expFalses++
+			}
+		}
+		for _, t2V := range t2Arr {
+			if t2V {
+				trues++
+			} else {
+				falses++
+			}
+		}
+		return expTrues == trues && expFalses == falses
 	case string:
 		if cs == CaseSensitive {
 			return t1 == t2
