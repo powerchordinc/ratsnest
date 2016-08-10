@@ -73,7 +73,7 @@ if err != nil {
 
 After obtaining the root "Node" of your data, you can begin to `Require` other Nodes:
 
-```
+```go
 bazNode, err := root.Require(ratsnest.Node{
 	Key: "baz",
 	Value: 42,
