@@ -51,6 +51,40 @@ through all of those endless arbitrary objects.
 
 An [example application](https://github.com/powerchordinc/ratsnest/blob/master/example/main.go) can be found in the [`example` directory](https://github.com/powerchordinc/ratsnest/tree/master/example).
 
+Initialize your Rat's Nest with your `map[string]interface{}` data:
+
+```go
+data := map[string]interface{}{
+	"foo": "bar",
+	"baz": map[string]interface{}{
+		"bat": []interface{}{
+			42,
+			12.345,
+			false,
+		},
+	},
+}
+
+root, err := ratsnest.New(data)
+if err != nil {
+	// an issue with data prevented initialization
+}
+```
+
+After obtaining the root "Node" of your data, you can begin to `Require` other Nodes:
+
+```
+bazNode, err := root.Require(ratsnest.Node{
+	Key: "baz",
+	Value: 42,
+})
+if err != nil {
+	// Node not found or invalid Node passed to Require()
+}
+```
+
+You can then add Nodes requirements onto the newly-obtained nodes or continue adding requirement Nodes onto the root node.
+
 ### Comparison of Maps and Slices
 
 Where maps are concerned, you can ask for just a `Key`, a `Key` and `Value`, or the entire map as `Value: map[string]interface{}{...}`. Order of appearance does not matter. Case [in]sensitivity applies to both keys and values of the maps themselves (should the values be strings).
