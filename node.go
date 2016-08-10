@@ -165,11 +165,27 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1Check:
-			for _, v := range t1.([]interface{}) {
+		T1IfaceArr:
+			for _, v := range t1Arr {
 				for _, t2V := range t2Arr {
 					if isMatch(v, t2V, cs) {
-						continue T1Check
+						continue T1IfaceArr
+					}
+				}
+				return false
+			}
+		return true
+	case []string:
+		t1Arr := t1.([]string)
+		t2Arr, t2IsArr := t2.([]string)
+		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+			return false
+		}
+		T1StringArr:
+			for _, v := range t1Arr {
+				for _, t2V := range t2Arr {
+					if isMatch(v, t2V, cs) {
+						continue T1StringArr
 					}
 				}
 				return false

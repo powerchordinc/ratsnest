@@ -38,6 +38,12 @@ var _ = Describe("Rat's Nest", func() {
 					true,
 					72,
 				},
+				"dictum": []string{
+					"mi",
+					"eu",
+					"ultrices",
+					"imperdiet",
+				},
 			},
 		}
 		err = nil
@@ -300,7 +306,7 @@ var _ = Describe("Rat's Nest", func() {
 							toRegister: Node{Value: "sem"},
 						},
 					}),
-					Entry("for requesting an array value", validationCases{
+					Entry("for requesting an interface array value", validationCases{
 							{
 								toRegister: Node{
 									Value: []interface{}{
@@ -311,12 +317,37 @@ var _ = Describe("Rat's Nest", func() {
 								},
 							},
 					}),
-					Entry("for requesting an array with a mismatched value", validationCases{
+					Entry("for requesting an interface array with a mismatched value", validationCases{
 							{
 								toRegister: Node{
 									Value: []interface{}{
 										true,
 										72,
+										"foobar",
+									},
+								},
+								expErr: NodeNotFoundError{},
+							},
+					}),
+					Entry("for requesting a string array value", validationCases{
+							{
+								toRegister: Node{
+									Value: []string{
+										"mi",
+										"eu",
+										"ultrices",
+										"imperdiet",
+									},
+								},
+							},
+					}),
+					Entry("for requesting a string array with a mismatched value", validationCases{
+							{
+								toRegister: Node{
+									Value: []string{
+										"mi",
+										"eu",
+										"ultrices",
 										"foobar",
 									},
 								},
