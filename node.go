@@ -62,10 +62,6 @@ func (n *Node) addChildren() {
 			cn.addChildren()
 			n.childNodes = append(n.childNodes, cn)
 		}
-		// append the entire array as a child if that's what you're looking for
-		n.childNodes = append(n.childNodes, &Node{
-			Value: n.Value,
-		})
 	default:
 		cn := &Node{
 			Value:      n.Value,
@@ -93,9 +89,6 @@ func (n *Node) Require(node Node) (*Node, error) {
 
 // checkChildren checks children of a node for the existence of another node.
 func (n *Node) checkChildren(reqNode Node, depth int) *Node {
-	if reqNode.MaxDepth > 0 && depth > reqNode.MaxDepth {
-		return nil
-	}
 	for _, cn := range n.childNodes {
 		switch cn.Value.(type) {
 		case []interface{}:
@@ -199,8 +192,10 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 				return cn
 			}
 		}
-		if fn := cn.checkChildren(reqNode, depth+1); fn != nil {
-			return fn
+		if reqNode.MaxDepth < 1 || depth+1 <= reqNode.MaxDepth {
+			if fn := cn.checkChildren(reqNode, depth + 1); fn != nil {
+				return fn
+			}
 		}
 	}
 	return nil
@@ -208,7 +203,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 
 // checkKeyVal simply checks whether a key and a value match.
 func checkKeyVal(key, expKey string, val, expVal interface{}, cs CaseSensitivity) bool {
-	switch key {
+	switch expKey {
 	case "":
 		return isMatch(expVal, val, cs)
 	default:

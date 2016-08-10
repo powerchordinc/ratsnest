@@ -215,6 +215,7 @@ var _ = Describe("Rat's Nest", func() {
 					}
 				}
 
+
 				DescribeTable("satisfaction validation", satMatcher,
 					Entry("for an existing requirement with a depth of 1", validationCases{
 						{
@@ -610,7 +611,7 @@ var _ = Describe("Rat's Nest", func() {
 						},
 						{
 							toRegister: Node{
-								Value:    "hendrerit",
+								Value:    "sem",
 								MaxDepth: 1,
 							},
 							expErr: NodeNotFoundError{},
@@ -624,13 +625,19 @@ var _ = Describe("Rat's Nest", func() {
 							toRegister: Node{Key: "vel"},
 						},
 					}),
-					Entry("for non-existent requirements", validationCases{
+					Entry("for non-existent requirements with only keys", validationCases{
 						{
 							toRegister: Node{Key: "amet"},
 						},
 						{
 							toRegister: Node{Key: "foobar"},
 							expErr:     NodeNotFoundError{},
+						},
+					}),
+					Entry("for a requirement with an existing value but the wrong key", validationCases{
+						{
+							toRegister: Node{Key: "foobar", Value: "adipiscing"},
+							expErr: NodeNotFoundError{},
 						},
 					}),
 				)
