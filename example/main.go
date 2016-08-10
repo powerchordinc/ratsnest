@@ -2,21 +2,22 @@
 package main
 
 import (
-	"github.com/powerchordinc/ratsnest"
 	"fmt"
+
+	"github.com/powerchordinc/ratsnest"
 )
 
 var theData = []map[string]interface{}{
 	{
 		"firstName": "James",
-		"lastName": "Beam",
-		"age": 81,
+		"lastName":  "Beam",
+		"age":       81,
 	},
 	{
-		"name": "Maduro",
+		"name":         "Maduro",
 		"manufacturer": "Cigar City",
-		"depth": "dark",
-		"quantity": 12,
+		"depth":        "dark",
+		"quantity":     12,
 		"attributes": map[string]interface{}{
 			"manufacturedIn": map[string]interface{}{
 				"US": []string{
@@ -36,16 +37,16 @@ func main() {
 			panic(fmt.Errorf("Error creating a new root node: %v", err))
 		}
 		_, err = root.Require(ratsnest.Node{ // returns a ratsnest.Node, but we don't care in this case
-			Value: "Cigar City",
-			Key: "manufacturer", // defaults to any key
-			MaxDepth: 1, // defaults to 0, which is infinite
+			Value:    "Cigar City",
+			Key:      "manufacturer", // defaults to any key
+			MaxDepth: 1,              // defaults to 0, which is infinite
 		})
 		if err != nil {
 			continue // node not found
 		}
 		_, err = root.Require(ratsnest.Node{
 			Value: 12,
-			Key: "quantity",
+			Key:   "quantity",
 		})
 		if err != nil {
 			continue // node not found
@@ -57,8 +58,8 @@ func main() {
 			continue // node not found
 		}
 		_, err = usa.Require(ratsnest.Node{
-			Value: "Tampa",
-			Case: ratsnest.CaseInsensitive, // defaults to case-sensitive
+			Value:    "Tampa",
+			Case:     ratsnest.CaseInsensitive, // defaults to case-sensitive
 			MaxDepth: 2,
 		})
 		if err != nil {

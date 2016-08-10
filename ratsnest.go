@@ -3,7 +3,7 @@ package ratsnest
 // New creates a new Node with sourceData to be referenced in subsequent calls.
 func New(source map[string]interface{}) (*Node, error) {
 	n := &Node{
-		Value: source,
+		Value:      source,
 		sourceData: source,
 	}
 	valErr := n.isValid()

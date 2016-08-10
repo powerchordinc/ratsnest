@@ -10,25 +10,25 @@ type (
 	Node struct {
 		// Value indicates either the value of an existing node or the desired value of a node
 		// to be validated, depending on the context in which it is used.
-		Value             interface{}
+		Value interface{}
 		// Key is either the key of the map for the node or the key that the desired value must
 		// be within within the node.
-		Key               string
+		Key string
 		// Case indicates whether case sensitivity should be required for a match to occur. Defaults
 		// to case-sensitive.
-		Case              CaseSensitivity
+		Case CaseSensitivity
 		// MaxDepth is used to validate that a value appears no farther down the hierarchy of a node
 		// than MaxDepth levels. 0 is infinite, and is the default. The depth of values whose keys
 		// are directly inside the node is 1. MaxDepth should be thought of as applying to the depth
 		// of the Value rather than the depth of the Key.
-		MaxDepth          int
+		MaxDepth int
 
 		// childRequirements houses added-on nodes for validation of nodes within other nodes.
 		childRequirements []*Node
 		// childNodes houses Nodes that are are children of a node initialized with the New function.
-		childNodes        []*Node
+		childNodes []*Node
 		// sourceData points to the original data which was handed to the New initializer.
-		sourceData        map[string]interface{}
+		sourceData map[string]interface{}
 	}
 
 	// CaseSensitivity is a placeholder for an enum case sensitivity value.
@@ -46,8 +46,8 @@ func (n *Node) addChildren() {
 	case map[string]interface{}:
 		for k, v := range n.Value.(map[string]interface{}) {
 			cn := &Node{
-				Key: k,
-				Value: v,
+				Key:        k,
+				Value:      v,
 				sourceData: n.sourceData,
 			}
 			cn.addChildren()
@@ -56,7 +56,7 @@ func (n *Node) addChildren() {
 	case []interface{}:
 		for _, v := range n.Value.([]interface{}) {
 			cn := &Node{
-				Value: v,
+				Value:      v,
 				sourceData: n.sourceData,
 			}
 			cn.addChildren()
@@ -68,7 +68,7 @@ func (n *Node) addChildren() {
 		})
 	default:
 		cn := &Node{
-			Value: n.Value,
+			Value:      n.Value,
 			sourceData: n.sourceData,
 		}
 		n.childNodes = append(n.childNodes, cn)
@@ -249,15 +249,15 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1IfaceArr:
-			for _, v := range t1Arr {
-				for _, t2V := range t2Arr {
-					if isMatch(v, t2V, cs) {
-						continue T1IfaceArr
-					}
+	T1IfaceArr:
+		for _, v := range t1Arr {
+			for _, t2V := range t2Arr {
+				if isMatch(v, t2V, cs) {
+					continue T1IfaceArr
 				}
-				return false
 			}
+			return false
+		}
 		return true
 	case []string:
 		t1Arr := t1.([]string)
@@ -265,15 +265,15 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1StringArr:
-			for _, v := range t1Arr {
-				for _, t2V := range t2Arr {
-					if isMatch(v, t2V, cs) {
-						continue T1StringArr
-					}
+	T1StringArr:
+		for _, v := range t1Arr {
+			for _, t2V := range t2Arr {
+				if isMatch(v, t2V, cs) {
+					continue T1StringArr
 				}
-				return false
 			}
+			return false
+		}
 		return true
 	case []int:
 		t1Arr := t1.([]int)
@@ -281,15 +281,15 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1IntArr:
-			for _, v := range t1Arr {
-				for _, t2V := range t2Arr {
-					if v == t2V {
-						continue T1IntArr
-					}
+	T1IntArr:
+		for _, v := range t1Arr {
+			for _, t2V := range t2Arr {
+				if v == t2V {
+					continue T1IntArr
 				}
-				return false
 			}
+			return false
+		}
 		return true
 	case []int64:
 		t1Arr := t1.([]int64)
@@ -297,15 +297,15 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1Int64Arr:
-			for _, v := range t1Arr {
-				for _, t2V := range t2Arr {
-					if v == t2V {
-						continue T1Int64Arr
-					}
+	T1Int64Arr:
+		for _, v := range t1Arr {
+			for _, t2V := range t2Arr {
+				if v == t2V {
+					continue T1Int64Arr
 				}
-				return false
 			}
+			return false
+		}
 		return true
 	case []int32:
 		t1Arr := t1.([]int32)
@@ -313,15 +313,15 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1Int32Arr:
-			for _, v := range t1Arr {
-				for _, t2V := range t2Arr {
-					if v == t2V {
-						continue T1Int32Arr
-					}
+	T1Int32Arr:
+		for _, v := range t1Arr {
+			for _, t2V := range t2Arr {
+				if v == t2V {
+					continue T1Int32Arr
 				}
-				return false
 			}
+			return false
+		}
 		return true
 	case []float64:
 		t1Arr := t1.([]float64)
@@ -329,15 +329,15 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1Float64Arr:
-			for _, v := range t1Arr {
-				for _, t2V := range t2Arr {
-					if v == t2V {
-						continue T1Float64Arr
-					}
+	T1Float64Arr:
+		for _, v := range t1Arr {
+			for _, t2V := range t2Arr {
+				if v == t2V {
+					continue T1Float64Arr
 				}
-				return false
 			}
+			return false
+		}
 		return true
 	case []float32:
 		t1Arr := t1.([]float32)
@@ -345,15 +345,15 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if !t2IsArr || len(t1Arr) != len(t2Arr) {
 			return false
 		}
-		T1Float32Arr:
-			for _, v := range t1Arr {
-				for _, t2V := range t2Arr {
-					if v == t2V {
-						continue T1Float32Arr
-					}
+	T1Float32Arr:
+		for _, v := range t1Arr {
+			for _, t2V := range t2Arr {
+				if v == t2V {
+					continue T1Float32Arr
 				}
-				return false
 			}
+			return false
+		}
 		return true
 	case []bool:
 		t1Arr := t1.([]bool)
