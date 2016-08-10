@@ -93,7 +93,7 @@ For slices, you can ask for just one value within the slice, you can declare `Va
 
 ## Testing and Benchmarks
 
-The package has 100% unit test coverage with Ginkgo tests. There are also benchmarks in `benchmark_test.go`. The benchmarks test maps with different complexities and depths. 
+The package has 100% unit test coverage with Ginkgo tests. There are also benchmarks in `bench_test.go`. The benchmarks test maps with different complexities and depths.
 
 ### Benchmark Results
 
