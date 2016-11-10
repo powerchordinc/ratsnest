@@ -9,11 +9,26 @@ import (
 
 var theData = []map[string]interface{}{
 	{
-		"firstName": "James",
-		"lastName":  "Beam",
-		"age":       81,
+		"ID": 69,
+		"name":         "Oberon",
+		"manufacturer": "Bell's",
+		"quantity":     4,
+		"attributes": map[string]interface{}{
+			"manufacturedIn": map[string]interface{}{
+				"US": []string{
+					"Great Lakes",
+					"MI",
+					"Kalamazoo",
+				},
+			},
+			"color": map[string]interface{}{
+				"family": "orange",
+				"depth": "intermediate",
+			},
+		},
 	},
 	{
+		"ID": 420,
 		"name":         "Maduro",
 		"manufacturer": "Cigar City",
 		"depth":        "dark",
@@ -25,6 +40,10 @@ var theData = []map[string]interface{}{
 					"FL",
 					"Tampa",
 				},
+			},
+			"color": map[string]interface{}{
+				"family": "brown",
+				"depth": "dark",
 			},
 		},
 	},

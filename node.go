@@ -36,7 +36,9 @@ type (
 )
 
 const (
+	// CaseSensitive is the default.
 	CaseSensitive CaseSensitivity = iota
+	// CaseInsensitive will not consider case when matching.
 	CaseInsensitive
 )
 
@@ -90,14 +92,14 @@ func (n *Node) Require(node Node) (*Node, error) {
 // checkChildren checks children of a node for the existence of another node.
 func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 	for _, cn := range n.childNodes {
-		switch cn.Value.(type) {
+		switch castedVal := cn.Value.(type) {
 		case []interface{}:
 			if _, reqNodeIsArr := reqNode.Value.([]interface{}); reqNodeIsArr {
 				if checkKeyVal(cn.Key, reqNode.Key, cn.Value, reqNode.Value, cn.Case) {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]interface{}) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -109,7 +111,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]string) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -121,7 +123,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]int) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -133,7 +135,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]int64) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -145,7 +147,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]int32) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -157,7 +159,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]float64) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -169,7 +171,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]float32) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -181,7 +183,7 @@ func (n *Node) checkChildren(reqNode Node, depth int) *Node {
 					return cn
 				}
 			} else {
-				for _, v := range cn.Value.([]bool) {
+				for _, v := range castedVal {
 					if checkKeyVal(cn.Key, reqNode.Key, v, reqNode.Value, reqNode.Case) {
 						return cn
 					}
@@ -225,27 +227,25 @@ func checkKeyVal(key, expKey string, val, expVal interface{}, cs CaseSensitivity
 }
 
 func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
-	switch t1.(type) {
+	switch casted := t1.(type) {
 	case map[string]interface{}:
-		t1Map := t1.(map[string]interface{})
 		t2Map, t2IsMap := t2.(map[string]interface{})
-		if !t2IsMap || len(t1Map) != len(t2Map) {
+		if !t2IsMap || len(casted) != len(t2Map) {
 			return false
 		}
-		for k, v := range t1Map {
+		for k, v := range casted {
 			if t2Val, t2OK := t2Map[k]; !t2OK || !isMatch(v, t2Val, cs) {
 				return false
 			}
 		}
 		return true
 	case []interface{}:
-		t1Arr := t1.([]interface{})
 		t2Arr, t2IsArr := t2.([]interface{})
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 	T1IfaceArr:
-		for _, v := range t1Arr {
+		for _, v := range casted {
 			for _, t2V := range t2Arr {
 				if isMatch(v, t2V, cs) {
 					continue T1IfaceArr
@@ -255,13 +255,12 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		}
 		return true
 	case []string:
-		t1Arr := t1.([]string)
 		t2Arr, t2IsArr := t2.([]string)
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 	T1StringArr:
-		for _, v := range t1Arr {
+		for _, v := range casted {
 			for _, t2V := range t2Arr {
 				if isMatch(v, t2V, cs) {
 					continue T1StringArr
@@ -271,13 +270,12 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		}
 		return true
 	case []int:
-		t1Arr := t1.([]int)
 		t2Arr, t2IsArr := t2.([]int)
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 	T1IntArr:
-		for _, v := range t1Arr {
+		for _, v := range casted {
 			for _, t2V := range t2Arr {
 				if v == t2V {
 					continue T1IntArr
@@ -287,13 +285,12 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		}
 		return true
 	case []int64:
-		t1Arr := t1.([]int64)
 		t2Arr, t2IsArr := t2.([]int64)
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 	T1Int64Arr:
-		for _, v := range t1Arr {
+		for _, v := range casted {
 			for _, t2V := range t2Arr {
 				if v == t2V {
 					continue T1Int64Arr
@@ -303,13 +300,12 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		}
 		return true
 	case []int32:
-		t1Arr := t1.([]int32)
 		t2Arr, t2IsArr := t2.([]int32)
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 	T1Int32Arr:
-		for _, v := range t1Arr {
+		for _, v := range casted {
 			for _, t2V := range t2Arr {
 				if v == t2V {
 					continue T1Int32Arr
@@ -319,13 +315,12 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		}
 		return true
 	case []float64:
-		t1Arr := t1.([]float64)
 		t2Arr, t2IsArr := t2.([]float64)
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 	T1Float64Arr:
-		for _, v := range t1Arr {
+		for _, v := range casted {
 			for _, t2V := range t2Arr {
 				if v == t2V {
 					continue T1Float64Arr
@@ -335,13 +330,12 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		}
 		return true
 	case []float32:
-		t1Arr := t1.([]float32)
 		t2Arr, t2IsArr := t2.([]float32)
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 	T1Float32Arr:
-		for _, v := range t1Arr {
+		for _, v := range casted {
 			for _, t2V := range t2Arr {
 				if v == t2V {
 					continue T1Float32Arr
@@ -351,14 +345,13 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		}
 		return true
 	case []bool:
-		t1Arr := t1.([]bool)
 		t2Arr, t2IsArr := t2.([]bool)
-		if !t2IsArr || len(t1Arr) != len(t2Arr) {
+		if !t2IsArr || len(casted) != len(t2Arr) {
 			return false
 		}
 		trues, expTrues := 0, 0
 		falses, expFalses := 0, 0
-		for _, t1V := range t1Arr {
+		for _, t1V := range casted {
 			if t1V {
 				expTrues++
 			} else {
@@ -377,13 +370,11 @@ func isMatch(t1, t2 interface{}, cs CaseSensitivity) bool {
 		if cs == CaseSensitive {
 			return t1 == t2
 		}
-		t1Str := t1.(string)
 		t2Str, t2IsStr := t2.(string)
 		if !t2IsStr {
 			return false
 		}
-		t1Str, t2Str = strings.ToLower(t1Str), strings.ToLower(t2Str)
-		return t1Str == t2Str
+		return strings.EqualFold(casted, t2Str)
 	default:
 		return t1 == t2
 	}

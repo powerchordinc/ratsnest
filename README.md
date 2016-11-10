@@ -8,26 +8,21 @@ Let's try working with some arbitrary JSON:
 ```json
 {
 	"ID": 420,
-	"name": "Maduro",
+	"name":         "Maduro",
 	"manufacturer": "Cigar City",
-	"quantity": 12,
-	"values": {
+	"depth":        "dark",
+	"quantity":     12,
+	"attributes": {
+		"manufacturedIn": {
+			"US": [
+				"Gulf coast",
+				"FL",
+				"Tampa",
+			]
+		},
 		"color": {
 			"family": "brown",
-			"depth": "dark"
-		},
-		"attributes": {
-			"easeOfDescription": 0.1,
-			"classification": {
-				"ale"
-			},
-			"location": {
-				"US": [
-					"Gulf Coast",
-					"Tampa",
-					"FL"
-				]
-			}
+			"depth": "dark",
 		}
 	}
 }
@@ -54,13 +49,26 @@ An [example application](https://github.com/powerchordinc/ratsnest/blob/master/e
 Initialize your Rat's Nest with your `map[string]interface{}` data:
 
 ```go
+// Usually this would be unmarshaled.
 data := map[string]interface{}{
-	"foo": "bar",
-	"baz": map[string]interface{}{
-		"bat": []interface{}{
-			42,
-			12.345,
-			false,
+	{
+		"ID": 420,
+		"name":         "Maduro",
+		"manufacturer": "Cigar City",
+		"depth":        "dark",
+		"quantity":     12,
+		"attributes": map[string]interface{}{
+			"manufacturedIn": map[string]interface{}{
+				"US": []string{
+					"Gulf coast",
+					"FL",
+					"Tampa",
+				},
+			},
+			"color": map[string]interface{}{
+				"family": "brown",
+				"depth": "dark",
+			},
 		},
 	},
 }
@@ -71,15 +79,29 @@ if err != nil {
 }
 ```
 
-After obtaining the root "Node" of your data, you can begin to `Require` other Nodes:
+After obtaining the `root` "Node" of your data, you can begin to `Require` other Nodes:
 
 ```go
-bazNode, err := root.Require(ratsnest.Node{
-	Key: "bat",
-	Value: 42,
+// Note that `Value` is not required if `Key` is present.
+manufacturedNode, err := root.Require(ratsnest.Node{
+	Key: "manufacturedIn",
 })
 if err != nil {
-	// Node not found or invalid Node passed to Require()
+	// manufacturedIn key not found in the data.
+}
+// Note that `Key` is not required if `Value` is present.
+_, err = manufacturedNode.Require(ratsnest.Node{
+	Value: "Tampa"
+})
+if err != nil {
+	// "Tampa" not found in the manufacturedIn node.
+}
+_, err = root.Require(ratsnest.Node{
+	Key: "depth",
+	Value: "dark",
+})
+if err != nil {
+	// Node with "depth" key and "dark" value not found.
 }
 ```
 
