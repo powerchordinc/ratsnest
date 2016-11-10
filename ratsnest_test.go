@@ -1,656 +1,622 @@
 package ratsnest
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	"errors"
 	"strings"
 
-	. "github.com/onsi/ginkgo/extensions/table"
+	"testing"
 )
 
-var _ = Describe("Rat's Nest", func() {
-	var (
-		n    *Node
-		data map[string]interface{}
-		root *Node
-		err  error
-	)
-
-	BeforeEach(func() {
-		n = nil
-		data = map[string]interface{}{
-			"lorem": "ipsum",
-			"dolor": 592,
-			"amet": map[string]interface{}{
-				"consectetur": "adipiscing",
-				"elit": []interface{}{
-					"donec",
-					"hendrerit",
-					"turpis",
-					map[string]interface{}{
-						"vel": "sem",
-					},
+var (
+	data = map[string]interface{}{
+		"lorem": "ipsum",
+		"dolor": 592,
+		"amet": map[string]interface{}{
+			"consectetur": "adipiscing",
+			"elit": []interface{}{
+				"donec",
+				"hendrerit",
+				"turpis",
+				map[string]interface{}{
+					"vel": "sem",
 				},
-				"gravida": true,
-				"vestibulum": []interface{}{
-					36954.02,
+			},
+			"gravida": true,
+			"vestibulum": []interface{}{
+				36954.02,
+				true,
+				72,
+			},
+			"dictum": []string{
+				"mi",
+				"eu",
+				"ultrices",
+				"imperdiet",
+			},
+			"fusce": []int{
+				1,
+				2,
+				4,
+				3,
+			},
+			"nonQuam": []int64{
+				5,
+				6,
+				7,
+				8,
+			},
+			"sedQuam": []int32{
+				9,
+				10,
+				12,
+				11,
+			},
+			"rutrum": []float64{
+				1.123,
+				2.123,
+				4.123,
+				3.123,
+			},
+			"quisque": []float32{
+				5.123,
+				6.123,
+				8.123,
+				7.123,
+			},
+			"tristique": []bool{
+				false,
+				true,
+				true,
+				false,
+				true,
+			},
+		},
+	}
+	root *Node
+	vn *Node
+	n *Node
+)
+
+func reset() {
+	n = &Node{
+		Value: "ipsum",
+		Key:   "lorem",
+	}
+	vn = &Node{
+		Value: "foobar",
+		Key:   "bazbat",
+		sourceData: map[string]interface{}{
+			"foo": "bar",
+		},
+	}
+	root, _ = New(data)
+}
+
+func ensureValidationError(t *testing.T) {
+	err := vn.isValid()
+	if err == nil {
+		t.Error("Expected an error, but got none")
+	}
+}
+
+func TestNew(t *testing.T) {
+	defer reset()
+	_, err := New(nil)
+	if err == nil {
+		t.Error("Expected an error to occur when called with a nil value, but none occurred")
+	}
+}
+
+func TestIsValid_WithoutKeyOrValue(t *testing.T) {
+	defer reset()
+	vn.Key = ""
+	vn.Value = nil
+	ensureValidationError(t)
+}
+
+func TestIsValid_WithNegativeMaxDepth(t *testing.T) {
+	defer reset()
+	vn.MaxDepth = -1
+	ensureValidationError(t)
+}
+
+func TestIsValid_WithoutSourceData(t *testing.T) {
+	defer reset()
+	vn.sourceData = nil
+	ensureValidationError(t)
+}
+
+func TestRequire_ValidationWhenInvalid(t *testing.T) {
+	defer reset()
+	n.Key = ""
+	n.Value = nil
+	_, err := root.Require(*n)
+	if err == nil {
+		t.Error("Expected an error, but got none")
+	}
+}
+
+func TestRequire_ValidationWhenValid(t *testing.T) {
+	defer reset()
+	_, err := root.Require(*n)
+	if err != nil {
+		t.Errorf("Was expecting no error, but got %s", err.Error())
+	}
+	if len(root.childRequirements) != 1 {
+		t.Errorf("Was expecting childRequirements of the root to be 1, but was %d", len(root.childRequirements))
+	}
+}
+
+func TestRequire_Satisfaction(t *testing.T) {
+	defer reset()
+	for _, cases := range allValidationCases {
+		testSatisfactionCases(cases, t)
+	}
+}
+
+func TestErrorStrings_NoCriteria(t *testing.T) {
+	if (NoCriteriaError{}).Error() != "No requirements have been added to the root node." {
+		t.Errorf("Expected 'No requirements have been added to the root node.', but got '%s'", (NoCriteriaError{}).Error() )
+	}
+}
+
+func TestErrorStrings_UnfoundNode(t *testing.T) {
+	if (NodeNotFoundError{}).Error() != "The required node was not found in the parent." {
+		t.Errorf("Expected 'The required node was not found in the parent.', but got '%s'", (NodeNotFoundError{}).Error() )
+	}
+}
+
+type (
+	validationCase struct {
+		toRegister          Node
+		expErr              error
+		noChildRequirements bool
+	}
+
+	validationCases []validationCase
+)
+
+func testSatisfactionCases(cases validationCases, t *testing.T) {
+	pn := root
+	for _, c := range cases {
+		rn, err := pn.Require(c.toRegister)
+		if c.expErr == nil {
+			if err != nil {
+				t.Errorf("Expected error to be nil, but got %s", err.Error())
+			}
+		} else {
+			if err != c.expErr {
+				t.Errorf("Expected error to match %T, but got %T", c.expErr, err)
+			}
+		}
+		c.toRegister.Case = CaseInsensitive
+		c.toRegister.Key = strings.ToUpper(c.toRegister.Key)
+		valStr, valIsStr := c.toRegister.Value.(string)
+		if valIsStr {
+			c.toRegister.Value = strings.ToUpper(valStr)
+		}
+		rn, err = pn.Require(c.toRegister)
+		if c.expErr == nil {
+			if err != nil {
+				t.Errorf("Expected error to be nil, but got %s", err.Error())
+			}
+		} else {
+			if err != c.expErr {
+				t.Errorf("Expected error to match %T, but got %T", c.expErr, err)
+			}
+		}
+		if !c.noChildRequirements {
+			pn = rn
+		}
+	}
+}
+
+var allValidationCases = []validationCases{
+	{
+		{
+			toRegister: Node{Value: 592},
+		},
+	},
+	{
+		{
+			toRegister: Node{Value: "adipiscing"},
+		},
+	},
+	{
+		{
+			toRegister: Node{Value: "donec"},
+		},
+	},
+	{
+		{
+			toRegister: Node{Value: "sem"},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: 592,
+				Key:   "dolor",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: "adipiscing",
+				Key:   "consectetur",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: "sem",
+				Key:   "vel",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Key: "dolor",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Key: "consectetur",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Key: "vel",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: 592,
+			},
+			noChildRequirements: true,
+		},
+		{
+			toRegister: Node{
+				Value: "adipiscing",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Key: "amet",
+			},
+		},
+		{
+			toRegister: Node{
+				Key: "elit",
+			},
+		},
+		{
+			toRegister: Node{
+				Value: "donec",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{Key: "amet"},
+		},
+		{
+			toRegister: Node{Key: "elit"},
+		},
+		{
+			toRegister: Node{
+				Value: map[string]interface{}{
+					"vel": "sem",
+				},
+			},
+		},
+		{
+			toRegister: Node{Value: "sem"},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []interface{}{
 					true,
 					72,
+					36954.02,
 				},
-				"dictum": []string{
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []interface{}{
+					true,
+					72,
+					"foobar",
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []string{
 					"mi",
 					"eu",
 					"ultrices",
 					"imperdiet",
 				},
-				"fusce": []int{
-					1,
-					2,
-					4,
-					3,
-				},
-				"nonQuam": []int64{
-					5,
-					6,
-					7,
-					8,
-				},
-				"sedQuam": []int32{
-					9,
-					10,
-					12,
-					11,
-				},
-				"rutrum": []float64{
-					1.123,
-					2.123,
-					4.123,
-					3.123,
-				},
-				"quisque": []float32{
-					5.123,
-					6.123,
-					8.123,
-					7.123,
-				},
-				"tristique": []bool{
-					false,
-					true,
-					true,
-					false,
-					true,
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: "imperdiet",
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []string{
+					"mi",
+					"eu",
+					"ultrices",
+					"foobar",
 				},
 			},
-		}
-		err = nil
-	})
-
-	Specify("initialization with a nil map results in an error", func() {
-		_, err = New(nil)
-		Expect(err).To(MatchError(errors.New("No source data was found. Be sure to initialize ratnest with your data by using ratsnest.New(...)")))
-	})
-
-	Describe("Node validation", func() {
-		BeforeEach(func() {
-			n = &Node{
-				Value: "foobar",
-				Key:   "bazbat",
-				sourceData: map[string]interface{}{
-					"foo": "bar",
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []int{
+					4,
+					3,
+					2,
+					1,
 				},
-			}
-		})
-
-		JustBeforeEach(func() {
-			err = n.isValid()
-		})
-
-		Context("without a key nor value", func() {
-			BeforeEach(func() {
-				n.Key = ""
-				n.Value = nil
-			})
-
-			It("returns an error", func() {
-				Expect(err).To(MatchError(errors.New("Nodes must have a key or a value, or both")))
-			})
-		})
-
-		Context("with a negative MaxDepth", func() {
-			BeforeEach(func() {
-				n.MaxDepth = -1
-			})
-
-			It("returns an error", func() {
-				Expect(err).To(MatchError(errors.New("MaxDepth must be a positive integer")))
-			})
-		})
-
-		Context("without sourceData", func() {
-			BeforeEach(func() {
-				n.sourceData = nil
-			})
-
-			It("returns an error", func() {
-				Expect(err).To(MatchError(errors.New("No source data was found. Be sure to initialize ratnest with your data by using ratsnest.New(...)")))
-			})
-		})
-	})
-
-	Describe("registering new child node requirements", func() {
-		var reqNode *Node
-
-		BeforeEach(func() {
-			n = &Node{
-				Value: "ipsum",
-				Key:   "lorem",
-			}
-			root, err = New(data)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		JustBeforeEach(func() {
-			reqNode, err = root.Require(*n)
-		})
-
-		Context("when the required node is invalid", func() {
-			BeforeEach(func() {
-				n.Value = nil
-				n.Key = ""
-			})
-
-			Specify("an error is returned", func() {
-				Expect(err).To(MatchError(errors.New("Nodes must have a key or a value, or both")))
-			})
-		})
-
-		Context("when all is right in the world", func() {
-			Specify("happy times abound", func() {
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			Specify("the root node has a child", func() {
-				Expect(len(root.childRequirements)).To(Equal(1))
-			})
-		})
-
-		Describe("validation of data presence", func() {
-			Context("with valid requirements", func() {
-				type (
-					validationCase struct {
-						toRegister          Node
-						expErr              error
-						noChildRequirements bool
-					}
-
-					validationCases []validationCase
-				)
-
-				satMatcher := func(cases validationCases) {
-					pn := root
-					for _, c := range cases {
-						rn, err := pn.Require(c.toRegister)
-						if c.expErr == nil {
-							Expect(err).NotTo(HaveOccurred())
-						} else {
-							Expect(err).To(MatchError(c.expErr))
-						}
-						c.toRegister.Case = CaseInsensitive
-						c.toRegister.Key = strings.ToUpper(c.toRegister.Key)
-						valStr, valIsStr := c.toRegister.Value.(string)
-						if valIsStr {
-							c.toRegister.Value = strings.ToUpper(valStr)
-						}
-						rn, err = pn.Require(c.toRegister)
-						if c.expErr == nil {
-							Expect(err).NotTo(HaveOccurred())
-						} else {
-							Expect(err).To(MatchError(c.expErr))
-						}
-						if !c.noChildRequirements {
-							pn = rn
-						}
-					}
-				}
-
-
-				DescribeTable("satisfaction validation", satMatcher,
-					Entry("for an existing requirement with a depth of 1", validationCases{
-						{
-							toRegister: Node{Value: 592},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 2", validationCases{
-						{
-							toRegister: Node{Value: "adipiscing"},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 3", validationCases{
-						{
-							toRegister: Node{Value: "donec"},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 4", validationCases{
-						{
-							toRegister: Node{Value: "sem"},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 1 and a key", validationCases{
-						{
-							toRegister: Node{
-								Value: 592,
-								Key:   "dolor",
-							},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 2 and a key", validationCases{
-						{
-							toRegister: Node{
-								Value: "adipiscing",
-								Key:   "consectetur",
-							},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 3 and a key", validationCases{
-						{
-							toRegister: Node{
-								Value: "donec",
-								Key:   "elit",
-							},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 4 and a key", validationCases{
-						{
-							toRegister: Node{
-								Value: "sem",
-								Key:   "vel",
-							},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 1 and only a key", validationCases{
-						{
-							toRegister: Node{
-								Key: "dolor",
-							},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 2 and only a key", validationCases{
-						{
-							toRegister: Node{
-								Key: "consectetur",
-							},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 3 and only a key", validationCases{
-						{
-							toRegister: Node{
-								Key: "elit",
-							},
-						},
-					}),
-					Entry("for an existing requirement with a depth of 4 and only a key", validationCases{
-						{
-							toRegister: Node{
-								Key: "vel",
-							},
-						},
-					}),
-					Entry("for two existing requirements with depths of 1", validationCases{
-						{
-							toRegister: Node{
-								Value: 592,
-							},
-							noChildRequirements: true,
-						},
-						{
-							toRegister: Node{
-								Value: "adipiscing",
-							},
-						},
-					}),
-					Entry("for three existing requirements with depths of 1", validationCases{
-						{
-							toRegister: Node{
-								Key: "amet",
-							},
-						},
-						{
-							toRegister: Node{
-								Key: "elit",
-							},
-						},
-						{
-							toRegister: Node{
-								Value: "donec",
-							},
-						},
-					}),
-					Entry("for four existing requirements with depths of 1", validationCases{
-						{
-							toRegister: Node{Key: "amet"},
-						},
-						{
-							toRegister: Node{Key: "elit"},
-						},
-						{
-							toRegister: Node{
-								Value: map[string]interface{}{
-									"vel": "sem",
-								},
-							},
-						},
-						{
-							toRegister: Node{Value: "sem"},
-						},
-					}),
-					Entry("for requesting an interface array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []interface{}{
-									true,
-									72,
-									36954.02,
-								},
-							},
-						},
-					}),
-					Entry("for requesting an interface array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []interface{}{
-									true,
-									72,
-									"foobar",
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for requesting a string array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []string{
-									"mi",
-									"eu",
-									"ultrices",
-									"imperdiet",
-								},
-							},
-						},
-					}),
-					Entry("for requesting a value within a string array", validationCases{
-						{
-							toRegister: Node{
-								Value: "imperdiet",
-							},
-						},
-					}),
-					Entry("for requesting a string array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []string{
-									"mi",
-									"eu",
-									"ultrices",
-									"foobar",
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for requesting a int array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []int{
-									4,
-									3,
-									2,
-									1,
-								},
-							},
-						},
-					}),
-					Entry("for requesting a value within a int array", validationCases{
-						{
-							toRegister: Node{
-								Value: 3,
-							},
-						},
-					}),
-					Entry("for requesting a int array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []int{
-									4,
-									3,
-									2,
-									5,
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for requesting a int64 array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []int64{
-									8,
-									7,
-									6,
-									5,
-								},
-							},
-						},
-					}),
-					Entry("for requesting a value within a int64 array", validationCases{
-						{
-							toRegister: Node{
-								Value: int64(6),
-							},
-						},
-					}),
-					Entry("for requesting a int64 array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []int64{
-									7,
-									6,
-									5,
-									3,
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for requesting a int32 array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []int32{
-									12,
-									11,
-									9,
-									10,
-								},
-							},
-						},
-					}),
-					Entry("for requesting a value within a int32 array", validationCases{
-						{
-							toRegister: Node{
-								Value: int32(11),
-							},
-						},
-					}),
-					Entry("for requesting a int32 array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []int32{
-									9,
-									10,
-									11,
-									5,
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for requesting a float64 array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []float64{
-									1.123,
-									2.123,
-									3.123,
-									4.123,
-								},
-							},
-						},
-					}),
-					Entry("for requesting a value within a float64 array", validationCases{
-						{
-							toRegister: Node{
-								Value: float64(2.123),
-							},
-						},
-					}),
-					Entry("for requesting a float64 array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []float64{
-									1.123,
-									2.123,
-									3.123,
-									5.123,
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for requesting a float32 array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []float32{
-									5.123,
-									6.123,
-									7.123,
-									8.123,
-								},
-							},
-						},
-					}),
-					Entry("for requesting a value within a float32 array", validationCases{
-						{
-							toRegister: Node{
-								Value: float32(6.123),
-							},
-						},
-					}),
-					Entry("for requesting a float32 array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []float32{
-									5.123,
-									6.123,
-									7.123,
-									9.123,
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for requesting a bool array value", validationCases{
-						{
-							toRegister: Node{
-								Value: []bool{
-									true,
-									true,
-									true,
-									false,
-									false,
-								},
-							},
-						},
-					}),
-					Entry("for requesting a bool array with a mismatched value", validationCases{
-						{
-							toRegister: Node{
-								Value: []bool{
-									true,
-									true,
-									false,
-									false,
-									false,
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("when requesting a map value with a mismatched key", validationCases{
-						{
-							toRegister: Node{
-								Value: map[string]interface{}{
-									"vel": "bar",
-								},
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for two existing requirements with depths over 1", validationCases{
-						{
-							toRegister: Node{Key: "amet"},
-						},
-						{
-							toRegister: Node{Value: "hendrerit"},
-						},
-					}),
-					Entry("for two existing requirements with depths over 1 where one has a maximum depth too low to be satisfied", validationCases{
-						{
-							toRegister: Node{Key: "amet"},
-						},
-						{
-							toRegister: Node{
-								Value:    "sem",
-								MaxDepth: 1,
-							},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-					Entry("for two existing requirements with depths over 1 with only keys", validationCases{
-						{
-							toRegister: Node{Key: "amet"},
-						},
-						{
-							toRegister: Node{Key: "vel"},
-						},
-					}),
-					Entry("for non-existent requirements with only keys", validationCases{
-						{
-							toRegister: Node{Key: "amet"},
-						},
-						{
-							toRegister: Node{Key: "foobar"},
-							expErr:     NodeNotFoundError{},
-						},
-					}),
-					Entry("for a requirement with an existing value but the wrong key", validationCases{
-						{
-							toRegister: Node{Key: "foobar", Value: "adipiscing"},
-							expErr: NodeNotFoundError{},
-						},
-					}),
-				)
-			})
-		})
-	})
-
-	Describe("error descriptions", func() {
-		It("will return the correct error for no criteria", func() {
-			Expect(NoCriteriaError{}.Error()).To(Equal("No requirements have been added to the root node."))
-		})
-		It("will return the correct error for unfound nodes", func() {
-			Expect(NodeNotFoundError{}.Error()).To(Equal("The required node was not found in the parent."))
-		})
-	})
-})
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: 3,
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []int{
+					4,
+					3,
+					2,
+					5,
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []int64{
+					8,
+					7,
+					6,
+					5,
+				},
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: int64(6),
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []int64{
+					7,
+					6,
+					5,
+					3,
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []int32{
+					12,
+					11,
+					9,
+					10,
+				},
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: int32(11),
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []int32{
+					9,
+					10,
+					11,
+					5,
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []float64{
+					1.123,
+					2.123,
+					3.123,
+					4.123,
+				},
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: float64(2.123),
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []float64{
+					1.123,
+					2.123,
+					3.123,
+					5.123,
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []float32{
+					5.123,
+					6.123,
+					7.123,
+					8.123,
+				},
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: float32(6.123),
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []float32{
+					5.123,
+					6.123,
+					7.123,
+					9.123,
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []bool{
+					true,
+					true,
+					true,
+					false,
+					false,
+				},
+			},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: []bool{
+					true,
+					true,
+					false,
+					false,
+					false,
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{
+				Value: map[string]interface{}{
+					"vel": "bar",
+				},
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{Key: "amet"},
+		},
+		{
+			toRegister: Node{Value: "hendrerit"},
+		},
+	},
+	{
+		{
+			toRegister: Node{Key: "amet"},
+		},
+		{
+			toRegister: Node{
+				Value:    "sem",
+				MaxDepth: 1,
+			},
+			expErr: NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{Key: "amet"},
+		},
+		{
+			toRegister: Node{Key: "vel"},
+		},
+	},
+	{
+		{
+			toRegister: Node{Key: "amet"},
+		},
+		{
+			toRegister: Node{Key: "foobar"},
+			expErr:     NodeNotFoundError{},
+		},
+	},
+	{
+		{
+			toRegister: Node{Key: "foobar", Value: "adipiscing"},
+			expErr: NodeNotFoundError{},
+		},
+	},
+}
